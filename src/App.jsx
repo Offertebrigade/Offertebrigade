@@ -1,45 +1,39 @@
 import { useState, useRef, useEffect } from "react";
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
-const O = "#FF6B1A";
-const BG = "#0C0C0C";
-const CARD = "#141414";
-const CARD2 = "#181818";
-const BORDER = "#222";
-const MUTED = "#555";
-const MUTED2 = "#888";
+const O = "#C8440A";      // Terracotta oranje — warm, pakkend accent
+const BG = "#F5F0E8";     // Crème achtergrond
+const CARD = "#EDE7DA";   // Warm gebroken wit voor kaarten
+const CARD2 = "#E4DDD0";  // Iets donkerder kaart
+const BORDER = "#D4C9B5"; // Warme beige rand
+const MUTED = "#9C8E7E";  // Warm grijs voor subtekst
+const MUTED2 = "#6B5E50"; // Donker warm grijs
+const DARK = "#2C1F14";   // Donkerbruin voor tekst
+
+const ICONS = {
+  badkamer: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="32" height="32"><path d="M3 10h18v4a6 6 0 01-6 6H9a6 6 0 01-6-6v-4z"/><path d="M7 10V6a2 2 0 012-2h2"/><path d="M5 20v2M19 20v2"/></svg>,
+  keuken: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="32" height="32"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 9h20M9 9v12"/><circle cx="6" cy="6" r="1"/><circle cx="12" cy="6" r="1"/></svg>,
+  toilet: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="32" height="32"><path d="M6 3h12v4H6zM4 7h16v2a8 8 0 01-16 0V7z"/><path d="M10 19v2M14 19v2"/></svg>,
+  uitbouw: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="32" height="32"><path d="M3 21h18M3 10l9-7 9 7"/><path d="M9 21V12h6v9"/></svg>,
+  schilderwerk: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="32" height="32"><path d="M2 6h20v4H2zM4 10v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><path d="M12 10v10M8 10v10M16 10v10"/></svg>,
+  vloer: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="32" height="32"><rect x="2" y="4" width="9" height="8" rx="1"/><rect x="13" y="4" width="9" height="8" rx="1"/><rect x="2" y="14" width="9" height="6" rx="1"/><rect x="13" y="14" width="9" height="6" rx="1"/></svg>,
+  elektra: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="32" height="32"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+  sloopwerk: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="32" height="32"><path d="M15 12l-8.5 8.5a2.12 2.12 0 01-3-3L12 9"/><path d="M17.64 15L22 10.64"/><path d="M20.91 11.7l-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.86L16.01 4.6a5.56 5.56 0 00-3.94-1.64H9l.92.82A6.18 6.18 0 0112 8.4v1.56l2 2h2.47l2.26 1.91"/></svg>,
+  stucwerk: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>,
+  tegelwerk: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="32" height="32"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+};
 
 const CATEGORIES = [
-  { id: "badkamer", label: "Badkamer", icon: "🚿", saving: "€6.000+", desc: "Complete badkamerrenovatie of gedeeltelijk" },
-  { id: "keuken", label: "Keuken", icon: "🍳", saving: "€4.200+", desc: "Nieuwbouw, renovatie of maatwerkkeuken" },
-  { id: "toilet", label: "Toilet / WC", icon: "🚽", saving: "€500+", desc: "Nieuw toilet of volledige verbouwing" },
-  { id: "zonnepanelen", label: "Zonnepanelen", icon: "☀️", saving: "€1.200+", desc: "Bespaar op je energierekening" },
-  { id: "isolatie", label: "Isolatie", icon: "🏡", saving: "€900+/jr", desc: "Dak, vloer of spouwmuurisolatie" },
-  { id: "uitbouw", label: "Uitbouw / Aanbouw", icon: "🏗️", saving: "€5.500+", desc: "Meer woonruimte realiseren" },
-  { id: "dakkapel", label: "Dakkapel / Dakopbouw", icon: "🏠", saving: "€2.000+", desc: "Extra ruimte en licht op zolder" },
-  { id: "stucwerk", label: "Stucwerk", icon: "🪣", saving: "€600+", desc: "Gladde muren en plafonds" },
-  { id: "tegelwerk", label: "Tegelwerk", icon: "🔲", saving: "€750+", desc: "Vloer- en wandtegels" },
-  { id: "schilderwerk", label: "Schilderwerk", icon: "🖌️", saving: "€400+", desc: "Binnen of buiten schilderen" },
-  { id: "vloer", label: "Vloer leggen", icon: "📐", saving: "€800+", desc: "Laminaat, PVC, hout of tegels" },
-  { id: "cv-ketel", label: "CV-ketel vervangen", icon: "🔥", saving: "€300+", desc: "Efficiënte nieuwe cv-ketel" },
-  { id: "kozijnen", label: "Kozijnen vervangen", icon: "🪟", saving: "€1.500+", desc: "Kunststof of houten kozijnen" },
-  { id: "warmtepomp", label: "Warmtepomp", icon: "♻️", saving: "€2.500+", desc: "Duurzaam en energiezuinig verwarmen" },
-  { id: "airco", label: "Airconditioning", icon: "❄️", saving: "€600+", desc: "Koeling en verwarming in één" },
-  { id: "alarm", label: "Alarm / Beveiliging", icon: "🔐", saving: "€400+", desc: "Inbraakbeveiliging voor jouw woning" },
-  { id: "gevel", label: "Gevelrenovatie", icon: "🧱", saving: "€1.200+", desc: "Gevelreiniging of -renovatie" },
-  { id: "asbest", label: "Asbestsanering", icon: "⚠️", saving: "€500+", desc: "Veilig en gecertificeerd verwijderen" },
-  { id: "tuinaanleg", label: "Tuinaanleg", icon: "🌿", saving: "€1.000+", desc: "Bestrating, beplanting en meer" },
-  { id: "sloopwerk", label: "Sloopwerk", icon: "🔨", saving: "€800+", desc: "Professioneel slopen en afvoeren" },
-  { id: "elektra", label: "Elektrawerk", icon: "⚡", saving: "€500+", desc: "Groepenkast, bedrading, stopcontacten" },
-  { id: "schutting", label: "Schutting / Hekwerk", icon: "🌳", saving: "€600+", desc: "Nieuwe schutting of hekwerk" },
-  { id: "overkapping", label: "Overkapping / Carport", icon: "🏕️", saving: "€1.500+", desc: "Overdekte buitenruimte" },
-  { id: "trap", label: "Traprenovatie", icon: "🪜", saving: "€400+", desc: "Trap bekleden of volledig vernieuwen" },
-  { id: "zolder", label: "Zolderverbouwing", icon: "🏚️", saving: "€3.000+", desc: "Zolder omvormen tot woonruimte" },
-  { id: "serre", label: "Serre / Veranda", icon: "🌞", saving: "€2.000+", desc: "Lichte aanbouw van glas" },
-  { id: "waterverzachter", label: "Waterverzachter", icon: "💧", saving: "€300+", desc: "Kalk in water verminderen" },
-  { id: "ramen-deuren", label: "Ramen & Deuren", icon: "🚪", saving: "€900+", desc: "Plaatsen of vervangen" },
-  { id: "rolluiken", label: "Rolluiken / Zonwering", icon: "🌅", saving: "€500+", desc: "Buitenzonwering op maat" },
-  { id: "schoorsteen", label: "Schoorsteenrenovatie", icon: "🏭", saving: "€400+", desc: "Renovatie of herstel van schoorsteen" },
+  { id: "badkamer", label: "Badkamer", saving: "€6.000+", desc: "Complete badkamerrenovatie of gedeeltelijk" },
+  { id: "keuken", label: "Keuken", saving: "€4.200+", desc: "Nieuwbouw, renovatie of maatwerkkeuken" },
+  { id: "toilet", label: "Toilet / WC", saving: "€500+", desc: "Nieuw toilet of volledige verbouwing" },
+  { id: "uitbouw", label: "Uitbouw / Aanbouw", saving: "€5.500+", desc: "Meer woonruimte realiseren" },
+  { id: "schilderwerk", label: "Schilderwerk", saving: "€400+", desc: "Binnen of buiten schilderen" },
+  { id: "vloer", label: "Vloer leggen", saving: "€800+", desc: "Laminaat, PVC, hout of tegels" },
+  { id: "elektra", label: "Elektrawerk", saving: "€500+", desc: "Groepenkast, bedrading, stopcontacten" },
+  { id: "sloopwerk", label: "Sloopwerk", saving: "€800+", desc: "Professioneel slopen en afvoeren" },
+  { id: "stucwerk", label: "Stucwerk", saving: "€600+", desc: "Gladde muren en plafonds" },
+  { id: "tegelwerk", label: "Tegelwerk", saving: "€750+", desc: "Vloer- en wandtegels" },
 ];
 
 const STEPS = [
@@ -62,7 +56,7 @@ export default function App() {
   function scrollToForm() { formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }
 
   return (
-    <div style={{ background: BG, minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", color: "#fff" }}>
+    <div style={{ background: BG, minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", color: DARK }}>
       <style>{CSS}</style>
 
       {/* NAV */}
@@ -88,12 +82,12 @@ export default function App() {
         <div style={f.inner}>
           <div>
             <div style={f.logo}>OFFERTE<span style={{color:O}}>BRIGADE</span></div>
-            <p style={f.tagline}>Gratis offertes vergelijken voor alle renovaties in Nederland</p>
+            <p style={f.tagline}>Ontvang de scherpste offerte voor jouw renovatie in Nederland</p>
           </div>
           <div style={f.cols}>
             <div>
               <p style={f.colHead}>Populair</p>
-              {["Badkamer","Keuken","Zonnepanelen","Isolatie","Uitbouw"].map(l => (
+              {["Badkamer","Keuken","Uitbouw","Schilderwerk","Tegelwerk"].map(l => (
                 <p key={l} style={f.colLink} onClick={() => goCategory(CATEGORIES.find(c=>c.label===l))}>{l}</p>
               ))}
             </div>
@@ -107,7 +101,7 @@ export default function App() {
         </div>
         <div style={f.bottom}>
           <p>© 2026 OfferteBrigade.nl — Alle rechten voorbehouden</p>
-          <p>KvK: 12345678 · info@offertebrigade.nl</p>
+          <p>info@offertebrigade.nl</p>
         </div>
       </footer>
     </div>
@@ -123,13 +117,22 @@ function HomePage({ goCategory, goPartner, formRef }) {
         <div style={h.tags}>
           {["GRATIS","VRIJBLIJVEND","BINNEN 24 UUR"].map(t=><span key={t} style={h.tag}>{t}</span>)}
         </div>
-        <h1 style={h.h1}>Vergelijk de<br/><span style={{color:O}}>scherpste</span><br/>offertes</h1>
-        <p style={h.sub}>Één aanvraag. Meerdere offertes. Jij kiest de beste deal — altijd gratis en vrijblijvend.</p>
+        <h1 style={h.h1}>Ontvang de<br/><span style={{color:O}}>scherpste</span><br/>offerte</h1>
+        <p style={h.slogan}>START MET SLIM VERGELIJKEN.<br/>STOP MET TEVEEL BETALEN.</p>
+        <p style={h.sub}>Stuur ons jouw klus. Wij gaan voor jou op zoek naar de beste prijs — gratis en zonder verplichtingen.</p>
         <QuickSelect goCategory={goCategory} />
         <div style={h.stats}>
-          {[["30+","Categorieën"],["24u","Reactietijd"],["100%","Vrijblijvend"],["3","Offertes gem."]].map(([n,l])=>(
+          {[["30+","Categorieën"],["3 dagen","Reactietijd"],["100%","Vrijblijvend"],["3","Offertes gem."]].map(([n,l])=>(
             <div key={l} style={h.stat}><span style={h.sn}>{n}</span><span style={h.sl}>{l}</span></div>
           ))}
+        </div>
+      </section>
+
+      {/* SLOGAN BANNER */}
+      <section style={sl.wrap}>
+        <div style={sl.inner}>
+          <p style={sl.line1}>START MET SLIM VERGELIJKEN.</p>
+          <p style={sl.line2}>STOP MET TEVEEL BETALEN.</p>
         </div>
       </section>
 
@@ -139,9 +142,9 @@ function HomePage({ goCategory, goPartner, formRef }) {
         <SectionTitle>3 stappen naar jouw offerte</SectionTitle>
         <div style={hw.grid}>
           {[
-            {n:"01",t:"Kies je project",b:"Selecteer de renovatie die je wilt laten uitvoeren."},
-            {n:"02",t:"Wij regelen alles",b:"We koppelen jou aan gecheckte vakmensen in jouw regio."},
-            {n:"03",t:"Vergelijk & kies",b:"Ontvang meerdere offertes en kies de beste deal."},
+            {n:"01",t:"Stuur je klus in",b:"Vertel ons wat je wilt laten renoveren en wat je budget is."},
+            {n:"02",t:"Wij zoeken de scherpste prijs",b:"Wij gaan namens jou op zoek naar de beste vakman tegen de laagste prijs."},
+            {n:"03",t:"Jij ontvangt de beste offerte",b:"Je ontvangt direct de scherpste offerte — zonder gedoe, zonder verplichtingen."},
           ].map(i=>(
             <div key={i.n} style={hw.card} className="ob-card">
               <span style={hw.num}>{i.n}</span>
@@ -159,12 +162,14 @@ function HomePage({ goCategory, goPartner, formRef }) {
         <div style={cat.grid}>
           {CATEGORIES.map(c=>(
             <div key={c.id} style={cat.card} className="ob-card cat-card" onClick={()=>goCategory(c)}>
-              <span style={cat.icon}>{c.icon}</span>
-              <div>
+              <div style={cat.iconWrap}>
+                <span style={{color:O}}>{ICONS[c.id]}</span>
+              </div>
+              <div style={cat.cardBody}>
                 <p style={cat.label}>{c.label}</p>
                 <p style={cat.desc}>{c.desc}</p>
+                <span style={cat.saving}>Bespaar {c.saving} →</span>
               </div>
-              <span style={cat.saving}>Bespaar {c.saving}</span>
             </div>
           ))}
         </div>
@@ -182,11 +187,11 @@ function HomePage({ goCategory, goPartner, formRef }) {
           </div>
           <div style={tr.right}>
             {[
-              ["✓","Gecheckte vakmensen","Alleen betrouwbare bedrijven in ons netwerk"],
-              ["✓","Geen verborgen kosten","Onze service is volledig gratis voor consumenten"],
-              ["✓","Jij bepaalt","Geen verplichting — jij kiest of je ingaat op een offerte"],
-              ["✓","Snel resultaat","Binnen 24 uur meerdere offertes in je inbox"],
-              ["✓","30+ categorieën","Van badkamer tot zonnepanelen — alles onder één dak"],
+              ["✓","Wij doen het werk","Jij stuurt je klus in — wij zoeken de scherpste prijs voor jou"],
+              ["✓","Geen verborgen kosten","Onze service is volledig gratis voor jou als klant"],
+              ["✓","Geen verplichtingen","Jij beslist of je ingaat op de offerte die wij voor je vinden"],
+              ["✓","Snel resultaat","Binnen 3 werkdagen de scherpste offerte in je inbox"],
+              ["✓","30+ categorieën","Van badkamer tot zonnepanelen — wij regelen het voor jou"],
             ].map(([m,t,b])=>(
               <div key={t} style={tr.item}>
                 <span style={tr.check}>{m}</span>
@@ -263,7 +268,7 @@ function CategoryPage({ cat, goHome }) {
           De prijzen voor {cat.label.toLowerCase()} kunnen sterk variëren per aanbieder. Door meerdere offertes te vergelijken bespaar je gemiddeld {cat.saving} en kies jij de vakman die het beste bij jouw wensen en budget past.
         </p>
         <p style={{color:MUTED2,lineHeight:1.7}}>
-          Via Offerte Brigade ontvang je binnen 24 uur offertes van gecheckte vakmensen in jouw regio. Volledig gratis en zonder verplichtingen.
+          Via Offerte Brigade ontvang je binnen 3 werkdagen offertes van gecheckte vakmensen in jouw regio. Volledig gratis en zonder verplichtingen.
         </p>
       </div>
 
@@ -386,7 +391,7 @@ function Configurator({ prefill }) {
     <div style={{...cf.card, textAlign:"center"}} className="fade-in">
       <div style={cf.badge}>✓</div>
       <h3 style={cf.st}>AANVRAAG ONTVANGEN!</h3>
-      <p style={cf.ss}>We nemen binnen <span style={{color:O}}>24 uur</span> contact op met <strong>{form.naam}</strong>.</p>
+      <p style={cf.ss}>We nemen binnen <span style={{color:O}}>3 werkdagen</span> contact op met <strong>{form.naam}</strong>.</p>
       <div style={cf.sumBox}>
         {answers.project && <SRow k="Project" v={answers.project} />}
         {answers.budget && <SRow k="Budget" v={answers.budget} />}
@@ -471,10 +476,10 @@ function SectionTitle({children}) {
 
 // ─── STYLES ───────────────────────────────────────────────────────────────────
 const n = {
-  bar:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 24px",borderBottom:`1px solid ${BORDER}`,position:"sticky",top:0,background:"rgba(12,12,12,0.96)",backdropFilter:"blur(8px)",zIndex:100},
+  bar:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 24px",borderBottom:`1px solid ${BORDER}`,position:"sticky",top:0,background:"rgba(245,240,232,0.96)",backdropFilter:"blur(8px)",zIndex:100},
   logo:{display:"flex",alignItems:"center",gap:10,cursor:"pointer"},
   ob:{background:O,color:"#fff",fontFamily:"'Bebas Neue',cursive",fontSize:14,padding:"4px 7px",letterSpacing:1},
-  name:{fontFamily:"'Bebas Neue',cursive",fontSize:18,letterSpacing:2},
+  name:{fontFamily:"'Bebas Neue',cursive",fontSize:18,letterSpacing:2,color:DARK},
   links:{display:"flex",alignItems:"center",gap:24},
   link:{fontSize:13,color:MUTED2,cursor:"pointer",letterSpacing:"0.5px"},
   cta:{padding:"8px 16px",background:O,color:"#fff",border:"none",fontFamily:"'Bebas Neue',cursive",fontSize:14,letterSpacing:1.5,cursor:"pointer"},
@@ -484,18 +489,26 @@ const h = {
   wrap:{maxWidth:600,margin:"0 auto",padding:"64px 24px 48px",textAlign:"center"},
   tags:{display:"flex",justifyContent:"center",gap:8,marginBottom:24,flexWrap:"wrap"},
   tag:{fontSize:10,letterSpacing:"2px",color:O,border:`1px solid ${O}`,padding:"4px 10px"},
-  h1:{fontFamily:"'Bebas Neue',cursive",fontSize:"clamp(56px,12vw,88px)",lineHeight:0.95,marginBottom:20,letterSpacing:1},
+  h1:{fontFamily:"'Bebas Neue',cursive",fontSize:"clamp(56px,12vw,88px)",lineHeight:0.95,marginBottom:16,letterSpacing:1,color:DARK},
+  slogan:{fontFamily:"'Bebas Neue',cursive",fontSize:"clamp(14px,2.5vw,18px)",letterSpacing:"3px",color:O,marginBottom:16,lineHeight:1.6},
   sub:{fontSize:16,color:MUTED2,lineHeight:1.7,marginBottom:32,maxWidth:440,margin:"0 auto 32px"},
   stats:{display:"flex",justifyContent:"center",gap:28,borderTop:`1px solid ${BORDER}`,paddingTop:32,flexWrap:"wrap",marginTop:32},
   stat:{display:"flex",flexDirection:"column",alignItems:"center",gap:3},
-  sn:{fontFamily:"'Bebas Neue',cursive",fontSize:34,color:"#fff",letterSpacing:1},
+  sn:{fontFamily:"'Bebas Neue',cursive",fontSize:34,color:DARK,letterSpacing:1},
   sl:{fontSize:11,color:MUTED,letterSpacing:"1px"},
 };
 
 const qs = {
   wrap:{display:"flex",flexDirection:"column",gap:10,maxWidth:480,margin:"0 auto"},
-  select:{padding:"13px 14px",background:CARD,border:`1px solid ${BORDER}`,color:"#fff",fontSize:15,fontFamily:"'DM Sans',sans-serif",width:"100%"},
+  select:{padding:"13px 14px",background:CARD,border:`1px solid ${BORDER}`,color:DARK,fontSize:15,fontFamily:"'DM Sans',sans-serif",width:"100%"},
   btn:{padding:"13px 20px",background:O,color:"#fff",border:"none",fontFamily:"'Bebas Neue',cursive",fontSize:16,letterSpacing:2,cursor:"pointer"},
+};
+
+const sl = {
+  wrap:{background:DARK,padding:"28px 24px",textAlign:"center"},
+  inner:{maxWidth:900,margin:"0 auto"},
+  line1:{fontFamily:"'Bebas Neue',cursive",fontSize:"clamp(20px,4vw,36px)",letterSpacing:"4px",color:"#fff",marginBottom:4},
+  line2:{fontFamily:"'Bebas Neue',cursive",fontSize:"clamp(20px,4vw,36px)",letterSpacing:"4px",color:O},
 };
 
 const hw = {
@@ -503,67 +516,68 @@ const hw = {
   grid:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(230px,1fr))",gap:14},
   card:{background:CARD,border:`1px solid ${BORDER}`,padding:"26px 22px",transition:"border-color 0.2s"},
   num:{fontFamily:"'Bebas Neue',cursive",fontSize:44,color:O,display:"block",marginBottom:10},
-  ct:{fontSize:16,fontWeight:600,marginBottom:6},
+  ct:{fontSize:16,fontWeight:700,marginBottom:6,color:DARK},
   cb:{fontSize:14,color:MUTED2,lineHeight:1.6},
 };
 
 const cat = {
   wrap:{maxWidth:1000,margin:"0 auto",padding:"0 24px 64px"},
-  grid:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:10},
-  card:{background:CARD,border:`1px solid ${BORDER}`,padding:"16px 18px",display:"flex",alignItems:"center",gap:14,cursor:"pointer",transition:"all 0.15s"},
-  icon:{fontSize:24,flexShrink:0},
-  label:{fontWeight:600,fontSize:14,marginBottom:2},
-  desc:{fontSize:12,color:MUTED2},
-  saving:{fontSize:11,color:O,fontWeight:600,flexShrink:0,textAlign:"right"},
+  grid:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:12},
+  card:{background:CARD,border:`1px solid ${BORDER}`,cursor:"pointer",transition:"all 0.2s",overflow:"hidden",display:"flex",alignItems:"center",gap:16,padding:"20px"},
+  iconWrap:{width:56,height:56,background:"#F5EDE0",border:`1px solid ${BORDER}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0},
+  cardBody:{flex:1},
+  label:{fontWeight:700,fontSize:15,marginBottom:3,color:DARK},
+  desc:{fontSize:12,color:MUTED2,marginBottom:6,lineHeight:1.4},
+  saving:{fontSize:12,color:O,fontWeight:600},
 };
 
 const tr = {
-  wrap:{background:"#0f0f0f",borderTop:`1px solid ${BORDER}`,borderBottom:`1px solid ${BORDER}`,padding:"64px 24px"},
+  wrap:{background:CARD,borderTop:`1px solid ${BORDER}`,borderBottom:`1px solid ${BORDER}`,padding:"64px 24px"},
   inner:{maxWidth:900,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 1fr",gap:48,alignItems:"start"},
   left:{},
   right:{display:"flex",flexDirection:"column",gap:20},
-  h2:{fontFamily:"'Bebas Neue',cursive",fontSize:"clamp(30px,5vw,50px)",lineHeight:1.05,letterSpacing:1,marginBottom:24},
+  h2:{fontFamily:"'Bebas Neue',cursive",fontSize:"clamp(30px,5vw,50px)",lineHeight:1.05,letterSpacing:1,marginBottom:24,color:DARK},
   btn:{padding:"13px 24px",background:O,color:"#fff",border:"none",fontFamily:"'Bebas Neue',cursive",fontSize:16,letterSpacing:2,cursor:"pointer"},
   item:{display:"flex",gap:14,alignItems:"flex-start"},
   check:{color:O,fontSize:18,fontWeight:700,marginTop:2,flexShrink:0},
-  it:{fontWeight:600,fontSize:14,marginBottom:2},
+  it:{fontWeight:600,fontSize:14,marginBottom:2,color:DARK},
   ib:{fontSize:13,color:MUTED2,lineHeight:1.5},
 };
 
 const cf = {
   wrap:{maxWidth:520,margin:"0 auto",padding:"56px 24px"},
-  card:{background:CARD,border:`1px solid ${BORDER}`,padding:"32px 28px`"},
+  card:{background:CARD,border:`1px solid ${BORDER}`,padding:"32px 28px"},
   progWrap:{display:"flex",alignItems:"center",gap:12,marginBottom:22},
-  progTrack:{flex:1,height:2,background:"#1f1f1f",overflow:"hidden"},
+  progTrack:{flex:1,height:2,background:BORDER,overflow:"hidden"},
   progFill:{height:"100%",background:O},
   progLbl:{fontSize:11,color:MUTED,letterSpacing:1,flexShrink:0},
   stepTag:{fontSize:10,color:O,letterSpacing:"3px",marginBottom:6,fontWeight:600},
-  q:{fontFamily:"'Bebas Neue',cursive",fontSize:28,letterSpacing:1,marginBottom:4},
+  q:{fontFamily:"'Bebas Neue',cursive",fontSize:28,letterSpacing:1,marginBottom:4,color:DARK},
   sub2:{fontSize:13,color:MUTED2,marginBottom:20},
-  sel:{padding:"13px 14px",background:"#161616",border:`1px solid ${BORDER}`,color:"#fff",fontSize:15,fontFamily:"'DM Sans',sans-serif",width:"100%"},
-  opt:{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",background:CARD2,border:`1px solid ${BORDER}`,color:"#bbb",fontSize:15,cursor:"pointer",textAlign:"left",transition:"all 0.15s"},
-  optA:{background:"#1e1200",border:`1px solid ${O}`,color:"#fff"},
-  inp:{padding:"12px 13px",background:"#161616",border:`1px solid ${BORDER}`,color:"#fff",fontSize:15,fontFamily:"'DM Sans',sans-serif",width:"100%"},
+  sel:{padding:"13px 14px",background:BG,border:`1px solid ${BORDER}`,color:DARK,fontSize:15,fontFamily:"'DM Sans',sans-serif",width:"100%"},
+  opt:{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",background:BG,border:`1px solid ${BORDER}`,color:MUTED2,fontSize:15,cursor:"pointer",textAlign:"left",transition:"all 0.15s"},
+  optA:{background:"#F5EDE0",border:`1px solid ${O}`,color:DARK},
+  inp:{padding:"12px 13px",background:BG,border:`1px solid ${BORDER}`,color:DARK,fontSize:15,fontFamily:"'DM Sans',sans-serif",width:"100%"},
   subBtn:{padding:"15px",background:O,color:"#fff",border:"none",fontFamily:"'Bebas Neue',cursive",fontSize:18,letterSpacing:2,cursor:"pointer",width:"100%"},
-  badge:{width:56,height:56,background:O,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,fontWeight:700,margin:"0 auto 16px"},
-  st:{fontFamily:"'Bebas Neue',cursive",fontSize:30,letterSpacing:2,marginBottom:8},
-  ss:{fontSize:15,color:"#999",lineHeight:1.6,marginBottom:20},
-  sumBox:{background:CARD2,border:`1px solid ${BORDER}`,padding:"16px",textAlign:"left"},
+  badge:{width:56,height:56,background:O,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,fontWeight:700,margin:"0 auto 16px",color:"#fff"},
+  st:{fontFamily:"'Bebas Neue',cursive",fontSize:30,letterSpacing:2,marginBottom:8,color:DARK},
+  ss:{fontSize:15,color:MUTED2,lineHeight:1.6,marginBottom:20},
+  sumBox:{background:BG,border:`1px solid ${BORDER}`,padding:"16px",textAlign:"left"},
 };
 
 const pc = {
-  wrap:{background:O,padding:"40px 24px"},
+  wrap:{background:DARK,padding:"40px 24px"},
   inner:{maxWidth:900,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center",gap:24,flexWrap:"wrap"},
-  label:{fontSize:10,letterSpacing:"2px",color:"rgba(255,255,255,0.7)",marginBottom:6},
+  label:{fontSize:10,letterSpacing:"2px",color:"rgba(255,255,255,0.6)",marginBottom:6},
   h3:{fontFamily:"'Bebas Neue',cursive",fontSize:28,letterSpacing:1,color:"#fff",marginBottom:4},
-  sub:{fontSize:14,color:"rgba(255,255,255,0.8)"},
-  btn:{padding:"12px 24px",background:"transparent",color:"#fff",border:"2px solid #fff",fontFamily:"'Bebas Neue',cursive",fontSize:16,letterSpacing:2,cursor:"pointer",flexShrink:0},
+  sub:{fontSize:14,color:"rgba(255,255,255,0.7)"},
+  btn:{padding:"12px 24px",background:"transparent",color:"#fff",border:`2px solid ${O}`,fontFamily:"'Bebas Neue',cursive",fontSize:16,letterSpacing:2,cursor:"pointer",flexShrink:0},
 };
 
 const f = {
-  wrap:{borderTop:`1px solid ${BORDER}`,padding:"48px 24px 24px"},
+  wrap:{borderTop:`1px solid ${BORDER}`,padding:"48px 24px 24px",background:CARD},
   inner:{maxWidth:900,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr auto",gap:40,marginBottom:32,flexWrap:"wrap"},
-  logo:{fontFamily:"'Bebas Neue',cursive",fontSize:22,letterSpacing:3,marginBottom:8},
+  logo:{fontFamily:"'Bebas Neue',cursive",fontSize:22,letterSpacing:3,marginBottom:8,color:DARK},
   tagline:{fontSize:13,color:MUTED2,maxWidth:280},
   cols:{display:"flex",gap:40},
   colHead:{fontSize:10,color:MUTED,letterSpacing:"2px",marginBottom:10},
@@ -574,15 +588,15 @@ const f = {
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #0C0C0C; }
+  body { background: #F5F0E8; }
   .ob-btn { transition: background 0.15s, transform 0.15s !important; }
-  .ob-btn:hover { background: #ff8c42 !important; transform: translateY(-1px); }
-  .ob-btn-outline:hover { background: rgba(255,255,255,0.1) !important; }
+  .ob-btn:hover { background: #A8360A !important; transform: translateY(-1px); }
+  .ob-btn-outline:hover { background: rgba(200,68,10,0.15) !important; }
   .ob-btn-outline { transition: background 0.15s !important; }
   .ob-card:hover { border-color: ${O} !important; }
-  .cat-card:hover { background: #1a1a1a !important; transform: translateX(3px); }
+  .cat-card:hover { background: #E8E0D0 !important; transform: translateY(-3px); box-shadow: 0 8px 24px rgba(44,31,20,0.12); }
   .opt-btn { animation: slideUp 0.28s ease both; }
-  .opt-btn:hover { border-color: ${O} !important; background: #1e1200 !important; color: #fff !important; }
+  .opt-btn:hover { border-color: ${O} !important; background: #F5EDE0 !important; color: #2C1F14 !important; }
   .input-field:focus { outline: none; border-color: ${O} !important; }
   .ob-select { appearance: none; cursor: pointer; }
   .ob-select:focus { outline: none; border-color: ${O} !important; }
